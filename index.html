@@ -180,7 +180,7 @@
                     
                     <div class="mt-4 border-t pt-4 dark:border-gray-700">
                         <h3 class="text-lg font-bold text-navy dark:text-blue-300 mb-3">Certificate Information</h3>
-                        <textarea id="certificateText" name="certificateText" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-sm min-h-[80px]">This certifies that [Student Name] has successfully completed the [Course Module] module covering [Module Topics] at Rillcod Technologies.</textarea>
+                        <textarea id="certificateText" name="certificateText" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-sm min-h-[80px]">This certifies that [Student Name] has successfully completed the [Course Name] course, covering the [Course Module] module at Rillcod Technologies.</textarea>
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-3 mt-6">
@@ -290,7 +290,7 @@
                 
                 <div class="mt-6 border-t pt-4 dark:border-gray-700">
                     <h3 class="text-lg font-bold text-navy dark:text-blue-300 mb-3">Certificate Information</h3>
-                    <textarea id="batchCertificateText" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-sm min-h-[80px]">This certifies that [Student Name] has successfully completed the [Course Module] module covering [Module Topics] at Rillcod Technologies.</textarea>
+                    <textarea id="batchCertificateText" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-sm min-h-[80px]">This certifies that [Student Name] has successfully completed the [Course Name] course, covering the [Course Module] module at Rillcod Technologies.</textarea>
                 </div>
                 
                 <button type="button" class="w-full bg-maroon hover:bg-maroon-800 text-white py-2 px-4 rounded mt-6" id="generateBatchBtn">Generate Reports for All Students</button>
@@ -388,21 +388,21 @@
     </div>
     
     <!-- Hidden Report Content for PDF Generation -->
-    <div id="reportContent" class="page bg-white p-6 hidden" style="font-size: 12px;">
+    <div id="reportContent" class="page bg-white p-6 hidden text-black" style="font-size: 12px;">
         <div class="flex items-center justify-center mb-2 pb-2 border-b border-maroon">
             <div class="text-center">
                 <img src="https://res.cloudinary.com/dpigtwit0/image/upload/c_thumb,w_200,g_face/v1744353437/Logo_03_PNG_y3jntf.png" alt="RillCod Logo" class="h-16 mx-auto mb-1">
                 <div class="text-lg font-bold text-navy">RILLCOD TECHNOLOGIES</div>
                 <div class="italic text-maroon text-xs">Coding Today, Innovating Tomorrow</div>
-                <div class="text-xs text-navy mt-1">
+                <div class="text-xs text-black mt-1">
                     📍 26 Ogiesoba Avenue, Off Airport Road, GRA, Benin City • 📞 08116600091 • ✉ rillcod@gmail.com • 🌐 www.rillcod.com
                 </div>
             </div>
         </div>
 
-        <div class="text-center text-lg font-bold text-maroon my-2">STUDENT PROGRESS REPORT</div>
+        <div class="text-center text-lg font-bold text-navy my-2">STUDENT PROGRESS REPORT</div>
         
-        <div class="grid grid-cols-2 gap-1 mb-3 bg-light-navy p-2 rounded text-xs">
+        <div class="grid grid-cols-2 gap-1 mb-3 bg-light-navy p-2 rounded text-xs text-black">
             <div><strong>Student Name:</strong> <span id="reportStudentName">[Full Name]</span></div>
             <div><strong>Course:</strong> <span id="reportCourseName">[Course Name]</span></div>
             <div><strong>Current Module:</strong> <span id="reportCurrentModule">[Current Module]</span></div>
@@ -416,15 +416,15 @@
             <div>
                 <div class="mb-3">
                     <div class="text-sm font-bold text-navy mb-1 pb-1 border-b border-maroon">COURSE PROGRESS</div>
-                    <ul class="list-none pl-0 space-y-1 text-xs" id="reportProgressItems">
+                    <ul class="list-none pl-0 space-y-1 text-xs text-black" id="reportProgressItems">
                         <!-- Progress items will be added here -->
                     </ul>
-                    <div class="italic mt-1 text-xs"><strong>Next Module:</strong> <span id="reportNextModule">[Next Module]</span></div>
+                    <div class="italic mt-1 text-xs text-black"><strong>Next Module:</strong> <span id="reportNextModule">[Next Module]</span></div>
                 </div>
 
                 <div class="mb-3">
                     <div class="text-sm font-bold text-navy mb-1 pb-1 border-b border-maroon">PERFORMANCE ASSESSMENT</div>
-                    <table class="w-full border-collapse text-xs">
+                    <table class="w-full border-collapse text-xs text-black">
                         <tr>
                             <th class="bg-navy text-white p-1 border border-gray-300 text-left">Assessment</th>
                             <th class="bg-navy text-white p-1 border border-gray-300 text-left">Score</th>
@@ -458,33 +458,34 @@
                             <td class="p-1 border border-gray-300" colspan="2" id="homeworkCompletionDisplay">[Rating]</td>
                         </tr>
                     </table>
-                    
-                    <div class="bg-light-navy p-2 rounded mt-2 text-xs">
-                        <div><strong>Overall Performance:</strong></div>
-                        <div class="text-lg font-bold text-maroon text-center mt-1" id="overallGradeDisplay">[A-F]</div>
+                
+                    <div class="bg-light-navy p-1 rounded mt-2 text-xs text-black  flex items-center justify-between">
+                        <div class="font-bold text-navy text-base " >Overall Performance:</div>
+                        <div class="text-lg font-bold text-navy text-center mt-1" id="overallGradeDisplay">[A-F]</div>
                     </div>
                 </div>
             </div>
 
             <!-- Right Column -->
-            <div>
-                <div class="mb-3">
-                    <div class="text-sm font-bold text-navy mb-1 pb-1 border-b border-maroon">PERFORMANCE CHART</div>
-                    <div class="h-32">
-                        <canvas id="performanceChart"></canvas>
+            <div class="flex flex-row gap-4">
+                <!-- Left: Chart -->
+                <div class="w-1/2 flex flex-col justify-center">
+                    <div class="text-sm font-bold text-black mb-1 pb-1 border-b border-maroon">PERFORMANCE CHART</div>
+                    <div class="h-50 w-80 flex items-center justify-center"> <!-- Increased height and full width -->
+                        <canvas id="performanceChart" class="w-full h-full" style="max-width:100%;"></canvas>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <div class="text-sm font-bold text-navy mb-1 pb-1 border-b border-maroon">INSTRUCTOR'S EVALUATION</div>
-                    <div class="bg-light-maroon p-2 rounded text-xs" id="instructorComments">
+                <!-- Right: Instructor Evaluation -->
+                <div class="w-1/2">
+                    <div class="text-sm font-bold text-black mb-1 pb-1 border-b border-maroon">INSTRUCTOR'S EVALUATION</div>
+                    <div class="bg-light-maroon p-2 rounded text-xs text-black" id="instructorComments">
                         [Student] has shown [progress] in understanding Python fundamentals...
                     </div>
-                    <div class="mt-2 text-xs">
+                    <div class="mt-2 text-xs text-black">
                         <div><strong>✅ Key Strengths:</strong></div>
                         <div class="ml-2" id="strengthsDisplay">[Student strengths]</div>
                     </div>
-                    <div class="mt-2 text-xs">
+                    <div class="mt-2 text-xs text-black">
                         <div><strong>📈 Areas for Growth:</strong></div>
                         <div class="ml-2" id="growthDisplay">[Improvement areas]</div>
                     </div>
@@ -493,8 +494,8 @@
         </div>
 
         <div class="mt-4">
-            <div class="text-sm font-bold text-navy text-center mb-1 pb-1 border-b border-maroon">CERTIFICATE OF COMPLETION</div>
-            <div class="border border-maroon rounded p-3 text-center text-xs">
+            <div class="text-sm font-bold text-black text-center mb-1 pb-1 border-b border-maroon">CERTIFICATE OF COMPLETION</div>
+            <div class="border border-maroon rounded p-3 text-center text-xs text-black">
                 <div id="studentPhotoContainer" class="flex justify-center mb-2">
                     <!-- Student photo will be inserted here -->
                 </div>
@@ -516,7 +517,7 @@
             </div>
         </div>
 
-        <div class="text-center text-xs text-navy mt-4">
+        <div class="text-center text-xs text-black mt-4">
             © <span id="currentYear"></span> Rillcod Technologies | All Rights Reserved | Report generated on <span id="footerDate"></span>
         </div>
     </div>
@@ -1140,10 +1141,6 @@
                         "conditionals": "Implementing if/elif/else statements and logical conditions",
                         "loops": "Using while and for loops with proper control flow and iteration",
                         "functions": "Creating functions with parameters, return values, and understanding scope",
-                        "lists": "Working with list creation, indexing, slicing, and common methods",
-                        "dictionaries": "Understanding key-value pairs and common dictionary operations",
-                        "tuples": "Working with immutable sequences and tuple operations",
-                        "sets": "Understanding unique element collections and set operations",
                         "file handling": "Reading from and writing to files with proper file modes",
                         "oop": "Basic understanding of classes, objects, inheritance, and polymorphism",
                         "modules": "Importing and using standard library and custom modules",
@@ -1610,8 +1607,8 @@
             
             // Update certificate
             const processedCertText = (data.certificateText || '').replace(/\[Student Name\]/g, data.studentName)
-                                                         .replace(/\[Course Module\]/g, appSettings.currentModule)
-                                                         .replace(/\[Module Topics\]/g, appSettings.currentModule);
+                                                         .replace(/\[Course Name\]/g, appSettings.courseName)
+                                                         .replace(/\[Course Module\]/g, appSettings.currentModule);
             
             document.getElementById('certificateTextDisplay').innerHTML = processedCertText || 'No certificate text provided.';
             document.getElementById('nextTermFeeDisplay').textContent = appSettings.nextTermFee;
@@ -1724,10 +1721,10 @@
         }
         
         function calculateGrade(score) {
-            if (score >= 90) return 'A';
-            if (score >= 80) return 'B';
-            if (score >= 70) return 'C';
-            if (score >= 60) return 'D';
+            if (score >= 85) return 'A';
+            if (score >= 70) return 'B';
+            if (score >= 65) return 'C';
+            if (score >= 50) return 'D';
             return 'F';
         }
         
