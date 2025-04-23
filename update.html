@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Progress Report Generator - RillCod Technologies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Report content styles remain exactly the same */
+        :root {
+            --navy-blue: #000080;
+            --maroon: #800000;
+            --light-maroon: #ffebee;
+            --light-navy: #e8eaf6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 10mm 15mm 5mm 15mm;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+            border-bottom: 1.5px solid var(--maroon);
+        }
+        .header-content {
+            text-align: center;
+        }
+        .logo {
+            height: 20mm;
+            width: auto;
+            margin-bottom: 1mm;
+        }
+        .company-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: var(--navy-blue);
+            margin: 0;
+            line-height: 1.2;
+        }
+        .tagline {
+            font-style: italic;
+            color: var(--maroon);
+            margin: 1mm 0 0;
+            font-size: 9pt;
+        }
+        .contact-info {
+            font-size: 7pt;
+            color: var(--navy-blue);
+            margin-top: 1mm;
+        }
+        .report-title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 2mm 0 3mm;
+            color: var(--maroon);
+        }
+        .student-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2mm;
+            margin-bottom: 3mm;
+            background-color: var(--light-navy);
+            padding: 2mm;
+            border-radius: 2mm;
+            font-size: 9pt;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3mm;
+            margin-top: 2mm;
+        }
+        .section {
+            margin-bottom: 3mm;
+        }
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: var(--navy-blue);
+            margin: 0 0 2mm;
+            padding-bottom: 1mm;
+            border-bottom: 1px solid var(--maroon);
+        }
+        .progress-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 1mm 0;
+            font-size: 9pt;
+        }
+        .progress-list li {
+            margin-bottom: 1mm;
+            position: relative;
+            padding-left: 3mm;
+        }
+        .progress-list li:before {
+            content: "•";
+            color: var(--maroon);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        .assessment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1mm 0;
+            font-size: 9pt;
+        }
+        .assessment-table th, .assessment-table td {
+            border: 1px solid #ddd;
+            padding: 1mm;
+            text-align: left;
+        }
+        .assessment-table th {
+            background-color: var(--navy-blue);
+            color: white;
+            font-size: 9pt;
+        }
+        .comments {
+            background-color: var(--light-maroon);
+            padding: 2mm;
+            border-radius: 2mm;
+            font-size: 9pt;
+            margin: 1mm 0;
+        }
+        .chart-container {
+            height: 60mm;
+            margin: 2mm 0;
+            position: relative;
+        }
+        .certificate {
+            text-align: center;
+            margin-top: 3mm;
+            padding: 2mm;
+            border: 1px solid var(--maroon);
+            border-radius: 2mm;
+            font-size: 9pt;
+        }
+        .signature {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5mm;
+        }
+        .signature-line {
+            border-top: 1px solid var(--navy-blue);
+            width: 50mm;
+            margin-top: 10mm;
+        }
+        .hidden {
+            display: none;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #reportContent, #reportContent * {
+                visibility: visible;
+            }
+            #reportContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 10mm 15mm;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-800">Student Progress Report Generator</h1>
+            <p class="text-gray-600">RillCod Technologies - Coding Today, Innovating Tomorrow</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button class="tab active px-6 py-3 font-medium text-sm rounded-t-lg bg-blue-600 text-white" data-tab="single">
+                Single Report
+            </button>
+            <button class="tab px-6 py-3 font-medium text-sm rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300" data-tab="batch">
+                Batch Entry
+            </button>
+        </div>
+        
+        <!-- Single Report Tab -->
+        <div id="single-tab" class="tab-content active bg-white rounded-lg shadow-md p-6">
+            <form id="scoreForm" class="space-y-6">
+                <!-- Student Information -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Student Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Student Full Name:</label>
+                            <input type="text" id="studentName" name="studentName" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">Report Date:</label>
+                            <input type="date" id="reportDate" name="reportDate" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Assessment -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Performance Assessment</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="theoryScore" class="block text-sm font-medium text-gray-700 mb-1">Theory Test Score (0-100):</label>
+                            <input type="number" id="theoryScore" name="theoryScore" min="0" max="100" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="practicalScore" class="block text-sm font-medium text-gray-700 mb-1">Practical Test Score (0-100):</label>
+                            <input type="number" id="practicalScore" name="practicalScore" min="0" max="100" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="attendance" class="block text-sm font-medium text-gray-700 mb-1">Attendance Percentage (0-100):</label>
+                            <input type="number" id="attendance" name="attendance" min="0" max="100" value="100" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="participation" class="block text-sm font-medium text-gray-700 mb-1">Class Participation:</label>
+                            <select id="participation" name="participation" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Excellent">Excellent</option>
+                                <option value="Very Good">Very Good</option>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Needs Improvement">Needs Improvement</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="projectCompletion" class="block text-sm font-medium text-gray-700 mb-1">Project Completion:</label>
+                            <select id="projectCompletion" name="projectCompletion" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Completed all projects">Completed all projects</option>
+                                <option value="Completed most projects">Completed most projects</option>
+                                <option value="Completed some projects">Completed some projects</option>
+                                <option value="Started but not completed">Started but not completed</option>
+                                <option value="No projects completed">No projects completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="homeworkCompletion" class="block text-sm font-medium text-gray-700 mb-1">Homework Completion:</label>
+                            <select id="homeworkCompletion" name="homeworkCompletion" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Completed all assignments">Completed all assignments</option>
+                                <option value="Completed most assignments">Completed most assignments</option>
+                                <option value="Completed some assignments">Completed some assignments</option>
+                                <option value="Started but not completed">Started but not completed</option>
+                                <option value="No assignments completed">No assignments completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Progress -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Course Progress</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="courseName" class="block text-sm font-medium text-gray-700 mb-1">Course Name:</label>
+                            <input type="text" id="courseName" name="courseName" value="Python Programming Fundamentals" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="currentModule" class="block text-sm font-medium text-gray-700 mb-1">Current Module:</label>
+                                <input type="text" id="currentModule" name="currentModule" value="Variables to Conditionals" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="nextModule" class="block text-sm font-medium text-gray-700 mb-1">Next Module:</label>
+                                <input type="text" id="nextModule" name="nextModule" value="Loops (while/for) and Functions" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="moduleTopics" class="block text-sm font-medium text-gray-700 mb-1">Module Topics (comma separated):</label>
+                            <input type="text" id="moduleTopics" name="moduleTopics" placeholder="e.g., Variables, Data Types, Conditionals" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <button type="button" id="generateProgressBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center">
+                                    Generate Progress Items
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="python">
+                                    Python Basics
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="web">
+                                    Web Development
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="oop">
+                                    OOP Concepts
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Progress Items:</label>
+                            <div id="progressItems" class="space-y-2">
+                                <div class="progress-item flex gap-2">
+                                    <input type="text" name="progressItem[]" placeholder="Progress item (e.g., Variables & Data Types)" required 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <button type="button" class="remove-item-btn bg-red-600 hover:bg-red-700 text-white px-3 rounded-md" onclick="removeProgressItem(this)">
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-item-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm mt-2" onclick="addProgressItem()">
+                                Add Progress Item
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evaluation -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Evaluation</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="strengths" class="block text-sm font-medium text-gray-700 mb-1">Key Strengths:</label>
+                            <textarea id="strengths" name="strengths" required rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showStrengthOptions()">
+                                Suggest Strengths
+                            </button>
+                            <div id="strengthOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Excellent problem-solving skills')">
+                                    Excellent problem-solving skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Quick grasp of programming concepts')">
+                                    Quick grasp of concepts
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Strong logical thinking abilities')">
+                                    Strong logical thinking
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Excellent attention to detail')">
+                                    Attention to detail
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Creative approach to coding challenges')">
+                                    Creative approach
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Good collaborative skills')">
+                                    Collaborative skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Persistent in debugging code')">
+                                    Persistent debugging
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectStrength('Excellent code organization')">
+                                    Code organization
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="growth" class="block text-sm font-medium text-gray-700 mb-1">Areas for Growth:</label>
+                            <textarea id="growth" name="growth" required rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showGrowthOptions()">
+                                Suggest Areas for Growth
+                            </button>
+                            <div id="growthOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Could benefit from more practice with syntax')">
+                                    Syntax practice
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Needs to work on code commenting')">
+                                    Code commenting
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Should focus on variable naming conventions')">
+                                    Variable naming
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Would benefit from more pseudocode planning')">
+                                    Pseudocode planning
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Needs to improve error handling')">
+                                    Error handling
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Could work on program efficiency')">
+                                    Program efficiency
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Should practice more independent problem-solving')">
+                                    Independent problem-solving
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectGrowth('Needs to work on time management')">
+                                    Time management
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="comments" class="block text-sm font-medium text-gray-700 mb-1">Overall Comments:</label>
+                            <textarea id="comments" name="comments" required rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showCommentOptions()">
+                                Suggest Comments
+                            </button>
+                            <div id="commentOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] has shown remarkable progress in understanding Python fundamentals. With continued practice, [they] will master more advanced concepts quickly.')">
+                                    Remarkable progress
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] demonstrates good understanding of core concepts. Focusing on [their] areas for growth will help [them] become a more well-rounded programmer.')">
+                                    Good understanding
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] is developing solid programming skills. I encourage [them] to practice daily to reinforce the concepts we\'ve covered.')">
+                                    Developing skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] shows potential in programming. With more attention to detail and regular practice, [they] will see significant improvement.')">
+                                    Shows potential
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] has made steady progress this term. I recommend targeted practice in [their] weaker areas to build confidence.')">
+                                    Steady progress
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] is beginning to apply concepts effectively. Continued exposure to different problem types will help [them] grow.')">
+                                    Applying concepts
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] participates well in class. Focusing on [their] areas for improvement will help [them] excel in upcoming modules.')">
+                                    Participates well
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectComment('[Student] has a good foundation. I encourage [them] to challenge [themselves] with additional practice problems between sessions.')">
+                                    Good foundation
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate Information -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Certificate Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="certificateText" class="block text-sm font-medium text-gray-700 mb-1">Certificate Text:</label>
+                            <textarea id="certificateText" name="certificateText" required rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">This certifies that [Student Name] has successfully completed the [Course Name] module covering [Module Topics] at Rillcod Technologies.</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nextTermFee" class="block text-sm font-medium text-gray-700 mb-1">Next Term Fee:</label>
+                                <input type="text" id="nextTermFee" name="nextTermFee" value="₦15,000" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="bankDetails" class="block text-sm font-medium text-gray-700 mb-1">Bank Details:</label>
+                                <input type="text" id="bankDetails" name="bankDetails" value="PROVIDUS | ACCOUNT NUMBER: 7901178957" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="instructorName" class="block text-sm font-medium text-gray-700 mb-1">Instructor Name:</label>
+                                <input type="text" id="instructorName" name="instructorName" value="RillCod Technologies" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="duration" class="block text-sm font-medium text-gray-700 mb-1">Duration:</label>
+                                <input type="text" id="duration" name="duration" value="Termly" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" class="flex-1 bg-red-700 hover:bg-red-800 text-white py-3 px-4 rounded-md font-medium">
+                        Generate PDF Report
+                    </button>
+                    <button type="button" id="saveForBatchBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md font-medium">
+                        Save for Batch
+                    </button>
+                    <button type="button" id="clearFormBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Batch Report Tab -->
+        <div id="batch-tab" class="tab-content hidden bg-white rounded-lg shadow-md p-6">
+            <div class="space-y-6">
+                <!-- Batch Student Entry -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Batch Student Entry</h3>
+                    <div>
+                        <label for="batchStudentNames" class="block text-sm font-medium text-gray-700 mb-1">Student Names (one per line):</label>
+                        <textarea id="batchStudentNames" rows="5" placeholder="Enter student names, one per line"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- Performance Assessment -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Performance Assessment</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="batchTheoryScore" class="block text-sm font-medium text-gray-700 mb-1">Theory Test Score (0-100):</label>
+                            <input type="number" id="batchTheoryScore" min="0" max="100"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="batchPracticalScore" class="block text-sm font-medium text-gray-700 mb-1">Practical Test Score (0-100):</label>
+                            <input type="number" id="batchPracticalScore" min="0" max="100"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="batchAttendance" class="block text-sm font-medium text-gray-700 mb-1">Attendance Percentage (0-100):</label>
+                            <input type="number" id="batchAttendance" min="0" max="100" value="100"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="batchParticipation" class="block text-sm font-medium text-gray-700 mb-1">Class Participation:</label>
+                            <select id="batchParticipation"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Excellent">Excellent</option>
+                                <option value="Very Good">Very Good</option>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Needs Improvement">Needs Improvement</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="batchProjectCompletion" class="block text-sm font-medium text-gray-700 mb-1">Project Completion:</label>
+                            <select id="batchProjectCompletion"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Completed all projects">Completed all projects</option>
+                                <option value="Completed most projects">Completed most projects</option>
+                                <option value="Completed some projects">Completed some projects</option>
+                                <option value="Started but not completed">Started but not completed</option>
+                                <option value="No projects completed">No projects completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="batchHomeworkCompletion" class="block text-sm font-medium text-gray-700 mb-1">Homework Completion:</label>
+                            <select id="batchHomeworkCompletion"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an option</option>
+                                <option value="Completed all assignments">Completed all assignments</option>
+                                <option value="Completed most assignments">Completed most assignments</option>
+                                <option value="Completed some assignments">Completed some assignments</option>
+                                <option value="Started but not completed">Started but not completed</option>
+                                <option value="No assignments completed">No assignments completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evaluation -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Evaluation</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="batchStrengths" class="block text-sm font-medium text-gray-700 mb-1">Key Strengths:</label>
+                            <textarea id="batchStrengths" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showBatchStrengthOptions()">
+                                Suggest Strengths
+                            </button>
+                            <div id="batchStrengthOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Excellent problem-solving skills')">
+                                    Excellent problem-solving skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Quick grasp of programming concepts')">
+                                    Quick grasp of concepts
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Strong logical thinking abilities')">
+                                    Strong logical thinking
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Excellent attention to detail')">
+                                    Attention to detail
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Creative approach to coding challenges')">
+                                    Creative approach
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Good collaborative skills')">
+                                    Collaborative skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Persistent in debugging code')">
+                                    Persistent debugging
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchStrength('Excellent code organization')">
+                                    Code organization
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="batchGrowth" class="block text-sm font-medium text-gray-700 mb-1">Areas for Growth:</label>
+                            <textarea id="batchGrowth" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showBatchGrowthOptions()">
+                                Suggest Areas for Growth
+                            </button>
+                            <div id="batchGrowthOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Could benefit from more practice with syntax')">
+                                    Syntax practice
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Needs to work on code commenting')">
+                                    Code commenting
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Should focus on variable naming conventions')">
+                                    Variable naming
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Would benefit from more pseudocode planning')">
+                                    Pseudocode planning
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Needs to improve error handling')">
+                                    Error handling
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Could work on program efficiency')">
+                                    Program efficiency
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Should practice more independent problem-solving')">
+                                    Independent problem-solving
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchGrowth('Needs to work on time management')">
+                                    Time management
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="batchComments" class="block text-sm font-medium text-gray-700 mb-1">Overall Comments:</label>
+                            <textarea id="batchComments" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <button type="button" class="suggest-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm mt-2" onclick="showBatchCommentOptions()">
+                                Suggest Comments
+                            </button>
+                            <div id="batchCommentOptions" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] has shown remarkable progress in understanding Python fundamentals. With continued practice, [they] will master more advanced concepts quickly.')">
+                                    Remarkable progress
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] demonstrates good understanding of core concepts. Focusing on [their] areas for growth will help [them] become a more well-rounded programmer.')">
+                                    Good understanding
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] is developing solid programming skills. I encourage [them] to practice daily to reinforce the concepts we\'ve covered.')">
+                                    Developing skills
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] shows potential in programming. With more attention to detail and regular practice, [they] will see significant improvement.')">
+                                    Shows potential
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] has made steady progress this term. I recommend targeted practice in [their] weaker areas to build confidence.')">
+                                    Steady progress
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] is beginning to apply concepts effectively. Continued exposure to different problem types will help [them] grow.')">
+                                    Applying concepts
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] participates well in class. Focusing on [their] areas for improvement will help [them] excel in upcoming modules.')">
+                                    Participates well
+                                </div>
+                                <div class="pregen-option bg-gray-100 hover:bg-gray-200 p-2 rounded text-sm cursor-pointer" onclick="selectBatchComment('[Student] has a good foundation. I encourage [them] to challenge [themselves] with additional practice problems between sessions.')">
+                                    Good foundation
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Progress -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Course Progress</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="batchCourseName" class="block text-sm font-medium text-gray-700 mb-1">Course Name:</label>
+                            <input type="text" id="batchCourseName" value="Python Programming Fundamentals"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="batchCurrentModule" class="block text-sm font-medium text-gray-700 mb-1">Current Module:</label>
+                                <input type="text" id="batchCurrentModule" value="Variables to Conditionals"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="batchNextModule" class="block text-sm font-medium text-gray-700 mb-1">Next Module:</label>
+                                <input type="text" id="batchNextModule" value="Loops (while/for) and Functions"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="batchModuleTopics" class="block text-sm font-medium text-gray-700 mb-1">Module Topics (comma separated):</label>
+                            <input type="text" id="batchModuleTopics" placeholder="e.g., Variables, Data Types, Conditionals"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <button type="button" id="batchGenerateProgressBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                                    Generate Progress Items
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="python">
+                                    Python Basics
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="web">
+                                    Web Development
+                                </button>
+                                <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm" data-preset="oop">
+                                    OOP Concepts
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Progress Items:</label>
+                            <div id="batchProgressItems" class="space-y-2">
+                                <div class="progress-item flex gap-2">
+                                    <input type="text" name="batchProgressItem[]" placeholder="Progress item (e.g., Variables & Data Types)"
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <button type="button" class="remove-item-btn bg-red-600 hover:bg-red-700 text-white px-3 rounded-md" onclick="removeBatchProgressItem(this)">
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-item-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm mt-2" onclick="addBatchProgressItem()">
+                                Add Progress Item
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate Information -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4">Certificate Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="batchCertificateText" class="block text-sm font-medium text-gray-700 mb-1">Certificate Text:</label>
+                            <textarea id="batchCertificateText" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">This certifies that [Student Name] has successfully completed the [Course Name] module covering [Module Topics] at Rillcod Technologies.</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="batchNextTermFee" class="block text-sm font-medium text-gray-700 mb-1">Next Term Fee:</label>
+                                <input type="text" id="batchNextTermFee" value="₦15,000"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="batchBankDetails" class="block text-sm font-medium text-gray-700 mb-1">Bank Details:</label>
+                                <input type="text" id="batchBankDetails" value="PROVIDUS | ACCOUNT NUMBER: 7901178957"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="batchInstructorName" class="block text-sm font-medium text-gray-700 mb-1">Instructor Name:</label>
+                                <input type="text" id="batchInstructorName" value="RillCod Technologies"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="batchDuration" class="block text-sm font-medium text-gray-700 mb-1">Duration:</label>
+                                <input type="text" id="batchDuration" value="Termly"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Batch Button -->
+                <button type="button" id="generateBatchBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md font-medium">
+                    Generate Reports for All Students
+                </button>
+            </div>
+
+            <!-- Batch Reports Section -->
+            <div class="mt-8 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-bold text-blue-800 mb-4">Batch Reports</h3>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button id="printAllBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                        Print Selected
+                    </button>
+                    <button id="clearAllBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">
+                        Clear All
+                    </button>
+                </div>
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="combinePdfCheckbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" checked>
+                    <label for="combinePdfCheckbox" class="ml-2 block text-sm text-gray-700">
+                        Combine into single PDF
+                    </label>
+                </div>
+                <div id="savedReportsList" class="border border-gray-300 rounded-md p-4 max-h-64 overflow-y-auto">
+                    <div class="text-center text-gray-500">No reports saved yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden Report Content for PDF Generation -->
+    <div id="reportContent" class="page hidden">
+        <!-- Report content remains exactly the same as before -->
+        <div class="header">
+            <div class="header-content">
+                <img src="https://res.cloudinary.com/dpigtwit0/image/upload/c_thumb,w_200,g_face/v1744353437/Logo_03_PNG_y3jntf.png" alt="RillCod Logo" class="logo">
+                <div class="company-name">RILLCOD TECHNOLOGIES</div>
+                <div class="tagline">Coding Today, Innovating Tomorrow</div>
+                <div class="contact-info">
+                    📍 26 Ogiesoba Avenue, Off Airport Road, GRA, Benin City • 📞 08116600091 • ✉ rillcod@gmail.com • 🌐 www.rillcod.com
+                </div>
+            </div>
+        </div>
+
+        <div class="report-title">STUDENT PROGRESS REPORT</div>
+        
+        <div class="student-info">
+            <div><strong>Student Name:</strong> <span id="reportStudentName">[Full Name]</span></div>
+            <div><strong>Course:</strong> <span id="reportCourseName">[Course Name]</span></div>
+            <div><strong>Current Module:</strong> <span id="reportCurrentModule">[Current Module]</span></div>
+            <div><strong>Report Date:</strong> <span id="reportDateDisplay">[Date]</span></div>
+            <div><strong>Instructor:</strong> <span id="reportInstructor">[Instructor]</span></div>
+            <div><strong>Duration:</strong> <span id="reportDuration">[Duration]</span></div>
+        </div>
+
+        <div class="grid-container">
+            <div>
+                <div class="section">
+                    <div class="section-title">COURSE PROGRESS</div>
+                    <ul class="progress-list" id="reportProgressItems">
+                        <!-- Progress items will be added here -->
+                    </ul>
+                    <div style="font-style: italic; margin-top: 1mm;"><strong>Next Module:</strong> <span id="reportNextModule">[Next Module]</span></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">PERFORMANCE ASSESSMENT</div>
+                    <table class="assessment-table">
+                        <tr>
+                            <th>Assessment</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                        </tr>
+                        <tr>
+                            <td>Theory Test</td>
+                            <td id="theoryScoreDisplay">[XX]</td>
+                            <td id="theoryGradeDisplay">[A-F]</td>
+                        </tr>
+                        <tr>
+                            <td>Practical Test</td>
+                            <td id="practicalScoreDisplay">[XX]</td>
+                            <td id="practicalGradeDisplay">[A-F]</td>
+                        </tr>
+                        <tr>
+                            <td>Attendance</td>
+                            <td id="attendanceDisplay">[XX]%</td>
+                            <td id="attendanceGradeDisplay">[A-F]</td>
+                        </tr>
+                        <tr>
+                            <td>Participation</td>
+                            <td id="participationDisplay" colspan="2">[Rating]</td>
+                        </tr>
+                        <tr>
+                            <td>Project Completion</td>
+                            <td id="projectCompletionDisplay" colspan="2">[Rating]</td>
+                        </tr>
+                        <tr>
+                            <td>Homework Completion</td>
+                            <td id="homeworkCompletionDisplay" colspan="2">[Rating]</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="total-performance">
+                        <div><strong>Overall Performance:</strong></div>
+                        <div class="performance-grade" id="overallGradeDisplay">[A-F]</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section">
+                    <div class="section-title">PERFORMANCE CHART</div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">INSTRUCTOR'S EVALUATION</div>
+                    <div class="comments" id="instructorComments">
+                        [Student] has shown [progress] in understanding Python fundamentals...
+                    </div>
+                    <div style="margin-top: 2mm;">
+                        <div><strong>✅ Key Strengths:</strong></div>
+                        <div id="strengthsDisplay" style="margin-left: 2mm;">[Student strengths]</div>
+                    </div>
+                    <div style="margin-top: 2mm;">
+                        <div><strong>📈 Areas for Growth:</strong></div>
+                        <div id="growthDisplay" style="margin-left: 2mm;">[Improvement areas]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title" style="text-align: center;">CERTIFICATE OF COMPLETION</div>
+            <div class="certificate">
+                <p id="certificateTextDisplay">[Certificate text]</p>
+                <div class="payment-info">
+                    NEXT TERM FEE PAYMENT IS <span id="nextTermFeeDisplay">[Fee]</span> TO RILLCOD LTD.<br>
+                    BANK: <span id="bankDetailsDisplay">[Bank details]</span>
+                </div>
+                <div class="signature">
+                    <div>
+                        <div class="signature-line"></div>
+                        <p>Instructor's Signature</p>
+                    </div>
+                    <div>
+                        <div class="signature-line"></div>
+                        <p>Date</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © <span id="currentYear"></span> Rillcod Technologies | All Rights Reserved | Report generated on <span id="footerDate"></span>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Initialize chart variable
+        let performanceChart;
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Set default date to today
+        document.getElementById('reportDate').valueAsDate = new Date();
+        
+        // Initialize saved reports
+        let savedReports = JSON.parse(localStorage.getItem('rillcodSavedReports')) || [];
+        let selectedReports = [];
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active', 'bg-blue-600', 'text-white');
+                    t.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                
+                this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                this.classList.add('active', 'bg-blue-600', 'text-white');
+                document.getElementById(`${this.dataset.tab}-tab`).classList.remove('hidden');
+            });
+        });
+        
+        // Enhanced course content generator with detailed descriptions
+        const courseContentGenerator = {
+            getDescription: function(topic, language) {
+                const descriptions = {
+                    "python": {
+                        "variables": "Understanding variable declaration, assignment, naming conventions, and scope",
+                        "data types": "Working with integers, floats, strings, booleans, and type conversion",
+                        "operators": "Using arithmetic, comparison, logical, and assignment operators",
+                        "conditionals": "Implementing if/elif/else statements and logical conditions",
+                        "loops": "Using while and for loops with proper control flow and iteration",
+                        "functions": "Creating functions with parameters, return values, and understanding scope",
+                        "lists": "Working with list creation, indexing, slicing, and common methods",
+                        "dictionaries": "Understanding key-value pairs and common dictionary operations",
+                        "tuples": "Working with immutable sequences and tuple operations",
+                        "sets": "Understanding unique element collections and set operations",
+                        "file handling": "Reading from and writing to files with proper file modes",
+                        "oop": "Basic understanding of classes, objects, inheritance, and polymorphism",
+                        "modules": "Importing and using standard library and custom modules",
+                        "exceptions": "Handling errors and exceptions with try/except blocks",
+                        "debugging": "Identifying and fixing syntax errors and logical bugs",
+                        "comments": "Writing effective code comments and documentation",
+                        "strings": "String manipulation methods and formatting techniques",
+                        "input/output": "Using input() and print() functions effectively",
+                        "type conversion": "Converting between different data types explicitly",
+                        "algorithm": "Understanding basic algorithm design and implementation"
+                    },
+                    "javascript": {
+                        "variables": "Understanding var, let, const declarations and hoisting",
+                        "data types": "Working with primitives and objects in JavaScript",
+                        "functions": "Function declarations, expressions, arrow functions, and closures",
+                        "objects": "Object literals, properties, methods, and prototypes",
+                        "arrays": "Array methods and functional programming with arrays",
+                        "dom manipulation": "Selecting and modifying DOM elements",
+                        "events": "Event handling and propagation",
+                        "async": "Callbacks, promises, and async/await",
+                        "es6+": "Template literals, destructuring, spread/rest operators"
+                    },
+                    "html": {
+                        "structure": "HTML document structure and semantic elements",
+                        "forms": "Creating and validating forms",
+                        "tables": "Creating accessible data tables",
+                        "semantics": "Using semantic HTML5 elements",
+                        "multimedia": "Embedding images, audio and video",
+                        "accessibility": "Writing accessible HTML"
+                    },
+                    "css": {
+                        "selectors": "CSS selectors and specificity",
+                        "box model": "Understanding margin, border, padding, content",
+                        "layout": "Flexbox, Grid and positioning",
+                        "responsive": "Media queries and responsive design",
+                        "animations": "CSS transitions and animations",
+                        "variables": "CSS custom properties"
+                    },
+                    "java": {
+                        "variables": "Primitive types and object references",
+                        "classes": "Class structure and object instantiation",
+                        "inheritance": "Extending classes and polymorphism",
+                        "interfaces": "Implementing interfaces",
+                        "collections": "Lists, Sets, Maps and their implementations",
+                        "exceptions": "Exception handling with try-catch"
+                    },
+                    "csharp": {
+                        "variables": "Value types vs reference types",
+                        "classes": "Class members and access modifiers",
+                        "linq": "Language Integrated Query syntax",
+                        "delegates": "Delegates and lambda expressions",
+                        "async": "Async/await pattern"
+                    }
+                };
+                
+                // Try to find description for the specific language first
+                if (language && descriptions[language]) {
+                    for (const [key, desc] of Object.entries(descriptions[language])) {
+                        if (topic.toLowerCase().includes(key) || key.includes(topic.toLowerCase())) {
+                            return `${topic.charAt(0).toUpperCase() + topic.slice(1)}: ${desc}`;
+                        }
+                    }
+                }
+                
+                // Fall back to general programming concepts if not found
+                const generalDescriptions = {
+                    "variables": "Understanding variable declaration and usage",
+                    "functions": "Creating reusable blocks of code",
+                    "loops": "Repeating code execution",
+                    "conditionals": "Making decisions in code",
+                    "objects": "Working with object-oriented concepts",
+                    "arrays": "Storing and manipulating collections of data",
+                    "debugging": "Identifying and fixing errors in code"
+                };
+                
+                for (const [key, desc] of Object.entries(generalDescriptions)) {
+                    if (topic.toLowerCase().includes(key) || key.includes(topic.toLowerCase())) {
+                        return `${topic.charAt(0).toUpperCase() + topic.slice(1)}: ${desc}`;
+                    }
+                }
+                
+                // Default description if no match found
+                return `${topic}: Demonstrated understanding of ${topic.toLowerCase()} concepts`;
+            },
+            
+            generateFromTopics: function(topics, language) {
+                return topics.map(topic => {
+                    const trimmedTopic = topic.trim();
+                    if (!trimmedTopic) return null;
+                    return this.getDescription(trimmedTopic, language);
+                }).filter(item => item !== null);
+            },
+            
+            getPresetTopics: function(preset) {
+                const presets = {
+                    "python": [
+                        "Variables and Data Types",
+                        "Operators and Expressions",
+                        "Conditional Statements",
+                        "Loops (while/for)",
+                        "Functions and Scope",
+                        "Lists and Tuples",
+                        "Dictionaries and Sets",
+                        "File Handling",
+                        "Object-Oriented Programming",
+                        "Error Handling"
+                    ],
+                    "web": [
+                        "HTML Structure",
+                        "CSS Styling",
+                        "JavaScript Basics",
+                        "DOM Manipulation",
+                        "Responsive Design",
+                        "Forms and Validation",
+                        "Async Programming",
+                        "Browser APIs"
+                    ],
+                    "oop": [
+                        "Classes and Objects",
+                        "Inheritance",
+                        "Polymorphism",
+                        "Encapsulation",
+                        "Abstraction",
+                        "Interfaces",
+                        "Design Patterns"
+                    ]
+                };
+                
+                return presets[preset] || [];
+            }
+        };
+    
+        // Add progress item
+        function addProgressItem() {
+            const container = document.getElementById('progressItems');
+            const newItem = document.createElement('div');
+            newItem.className = 'progress-item flex gap-2';
+            newItem.innerHTML = `
+                <input type="text" name="progressItem[]" placeholder="Progress item (e.g., Variables & Data Types)" required 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" class="remove-item-btn bg-red-600 hover:bg-red-700 text-white px-3 rounded-md" onclick="removeProgressItem(this)">
+                    ×
+                </button>
+            `;
+            container.appendChild(newItem);
+        }
+        
+        // Add batch progress item
+        function addBatchProgressItem() {
+            const container = document.getElementById('batchProgressItems');
+            const newItem = document.createElement('div');
+            newItem.className = 'progress-item flex gap-2';
+            newItem.innerHTML = `
+                <input type="text" name="batchProgressItem[]" placeholder="Progress item (e.g., Variables & Data Types)"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" class="remove-item-btn bg-red-600 hover:bg-red-700 text-white px-3 rounded-md" onclick="removeBatchProgressItem(this)">
+                    ×
+                </button>
+            `;
+            container.appendChild(newItem);
+        }
+        
+        // Remove progress item
+        function removeProgressItem(button) {
+            const items = document.querySelectorAll('#progressItems .progress-item');
+            if (items.length > 1) {
+                button.parentElement.remove();
+            } else {
+                showToast("You need at least one progress item.", 'error');
+            }
+        }
+        
+        // Remove batch progress item
+        function removeBatchProgressItem(button) {
+            const items = document.querySelectorAll('#batchProgressItems .progress-item');
+            if (items.length > 1) {
+                button.parentElement.remove();
+            } else {
+                showToast("You need at least one progress item.", 'error');
+            }
+        }
+        
+        // Show strength options
+        function showStrengthOptions() {
+            document.getElementById('strengthOptions').classList.toggle('hidden');
+            document.getElementById('growthOptions').classList.add('hidden');
+            document.getElementById('commentOptions').classList.add('hidden');
+        }
+        
+        // Show batch strength options
+        function showBatchStrengthOptions() {
+            document.getElementById('batchStrengthOptions').classList.toggle('hidden');
+            document.getElementById('batchGrowthOptions').classList.add('hidden');
+            document.getElementById('batchCommentOptions').classList.add('hidden');
+        }
+        
+        // Select strength
+        function selectStrength(strength) {
+            document.getElementById('strengths').value = strength;
+            document.getElementById('strengthOptions').classList.add('hidden');
+        }
+        
+        // Select batch strength
+        function selectBatchStrength(strength) {
+            document.getElementById('batchStrengths').value = strength;
+            document.getElementById('batchStrengthOptions').classList.add('hidden');
+        }
+        
+        // Show growth options
+        function showGrowthOptions() {
+            document.getElementById('growthOptions').classList.toggle('hidden');
+            document.getElementById('strengthOptions').classList.add('hidden');
+            document.getElementById('commentOptions').classList.add('hidden');
+        }
+        
+        // Show batch growth options
+        function showBatchGrowthOptions() {
+            document.getElementById('batchGrowthOptions').classList.toggle('hidden');
+            document.getElementById('batchStrengthOptions').classList.add('hidden');
+            document.getElementById('batchCommentOptions').classList.add('hidden');
+        }
+        
+        // Select growth area
+        function selectGrowth(growth) {
+            document.getElementById('growth').value = growth;
+            document.getElementById('growthOptions').classList.add('hidden');
+        }
+        
+        // Select batch growth area
+        function selectBatchGrowth(growth) {
+            document.getElementById('batchGrowth').value = growth;
+            document.getElementById('batchGrowthOptions').classList.add('hidden');
+        }
+        
+        // Show comment options
+        function showCommentOptions() {
+            document.getElementById('commentOptions').classList.toggle('hidden');
+            document.getElementById('strengthOptions').classList.add('hidden');
+            document.getElementById('growthOptions').classList.add('hidden');
+        }
+        
+        // Show batch comment options
+        function showBatchCommentOptions() {
+            document.getElementById('batchCommentOptions').classList.toggle('hidden');
+            document.getElementById('batchStrengthOptions').classList.add('hidden');
+            document.getElementById('batchGrowthOptions').classList.add('hidden');
+        }
+        
+        // Select comment
+        function selectComment(comment) {
+            document.getElementById('comments').value = comment;
+            document.getElementById('commentOptions').classList.add('hidden');
+        }
+        
+        // Select batch comment
+        function selectBatchComment(comment) {
+            document.getElementById('batchComments').value = comment;
+            document.getElementById('batchCommentOptions').classList.add('hidden');
+        }
+        
+        // Generate progress items from topics
+        document.getElementById('generateProgressBtn').addEventListener('click', function() {
+            generateProgressItems('moduleTopics', 'progressItems');
+        });
+        
+        document.getElementById('batchGenerateProgressBtn').addEventListener('click', function() {
+            generateProgressItems('batchModuleTopics', 'batchProgressItems');
+        });
+        
+        function generateProgressItems(topicsInputId, containerId) {
+            const topicsInput = document.getElementById(topicsInputId).value;
+            if (!topicsInput.trim()) {
+                showToast("Please enter some topics first", 'error');
+                return;
+            }
+            
+            const btn = document.getElementById(topicsInputId === 'moduleTopics' ? 'generateProgressBtn' : 'batchGenerateProgressBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+            
+            // Split topics by comma and clean them up
+            const topics = topicsInput.split(',')
+                .map(topic => topic.trim())
+                .filter(topic => topic.length > 0);
+            
+            // Generate progress items
+            const generatedItems = courseContentGenerator.generateFromTopics(topics);
+            
+            // Update the UI with generated items
+            const progressItemsContainer = document.getElementById(containerId);
+            
+            // Clear existing items except the first one
+            while (progressItemsContainer.children.length > 1) {
+                progressItemsContainer.removeChild(progressItemsContainer.lastChild);
+            }
+            
+            // Update first item
+            const firstInput = progressItemsContainer.querySelector('input');
+            firstInput.value = generatedItems[0] || "Enter progress item";
+            
+            // Add remaining items
+            for (let i = 1; i < generatedItems.length; i++) {
+                const newItem = document.createElement('div');
+                newItem.className = 'progress-item flex gap-2';
+                newItem.innerHTML = `
+                    <input type="text" name="${containerId === 'progressItems' ? 'progressItem[]' : 'batchProgressItem[]'}" value="${generatedItems[i]}" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <button type="button" class="remove-item-btn bg-red-600 hover:bg-red-700 text-white px-3 rounded-md" 
+                            onclick="${containerId === 'progressItems' ? 'removeProgressItem' : 'removeBatchProgressItem'}(this)">
+                        ×
+                    </button>
+                `;
+                progressItemsContainer.appendChild(newItem);
+            }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showToast('Progress items generated!', 'success');
+        }
+        
+        // Handle preset buttons
+        document.querySelectorAll('[data-preset]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const preset = this.dataset.preset;
+                const topics = courseContentGenerator.getPresetTopics(preset);
+                const activeTab = document.querySelector('.tab-content.active').id;
+                
+                if (activeTab === 'single-tab') {
+                    document.getElementById('moduleTopics').value = topics.join(', ');
+                } else {
+                    document.getElementById('batchModuleTopics').value = topics.join(', ');
+                }
+                
+                showToast(`Loaded ${preset} preset topics`, 'info');
+            });
+        });
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-2 rounded-md shadow-md text-white ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+            }`;
+            toast.textContent = message;
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Clear form
+        document.getElementById('clearFormBtn').addEventListener('click', function() {
+            if (confirm('Clear all form fields?')) {
+                document.getElementById('scoreForm').reset();
+                document.getElementById('reportDate').valueAsDate = new Date();
+                
+                // Clear progress items except first one
+                const progressItems = document.querySelectorAll('#progressItems .progress-item');
+                for (let i = 1; i < progressItems.length; i++) {
+                    progressItems[i].remove();
+                }
+                
+                // Reset first progress item
+                const firstInput = document.querySelector('#progressItems .progress-item input');
+                if (firstInput) {
+                    firstInput.value = '';
+                }
+                
+                // Hide all suggestion panels
+                document.getElementById('strengthOptions').classList.add('hidden');
+                document.getElementById('growthOptions').classList.add('hidden');
+                document.getElementById('commentOptions').classList.add('hidden');
+            }
+        });
+        
+        // Save report for batch printing
+        document.getElementById('saveForBatchBtn').addEventListener('click', function() {
+            const formData = new FormData(document.getElementById('scoreForm'));
+            
+            // Validate required fields
+            if (!formData.get('studentName') || !formData.get('theoryScore') || !formData.get('practicalScore')) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const data = Object.fromEntries(formData.entries());
+            
+            // Get all progress items
+            data.progressItems = Array.from(document.querySelectorAll('[name="progressItem[]"]')).map(input => input.value);
+            
+            // Add to saved reports
+            savedReports.push(data);
+            localStorage.setItem('rillcodSavedReports', JSON.stringify(savedReports));
+            
+            updateSavedReportsList();
+            showToast('Report saved for batch printing!', 'success');
+            
+            // Clear the form after saving
+            document.getElementById('clearFormBtn').click();
+        });
+        
+        // Print selected reports
+        document.getElementById('printAllBtn').addEventListener('click', function() {
+            if (selectedReports.length === 0) {
+                showToast('No reports selected for printing.', 'error');
+                return;
+            }
+            
+            const combinePdf = document.getElementById('combinePdfCheckbox').checked;
+            
+            if (combinePdf) {
+                if (confirm(`Combine and print ${selectedReports.length} selected reports into one PDF?`)) {
+                    combineSelectedReportsIntoPdf();
+                }
+            } else {
+                if (confirm(`Print ${selectedReports.length} individual PDFs for selected reports?`)) {
+                    printSelectedReportsSequentially(0);
+                }
+            }
+        });
+        
+        // Combine selected reports into one PDF
+        async function combineSelectedReportsIntoPdf() {
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            let positionY = 0;
+            let firstPage = true;
+            
+            // Show loading indicator
+            const btn = document.getElementById('printAllBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generating PDF...';
+            btn.disabled = true;
+            
+            for (let i = 0; i < selectedReports.length; i++) {
+                const reportData = selectedReports[i];
+                await generateReportCanvas(reportData, (canvas) => {
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    const imgWidth = pdf.internal.pageSize.getWidth() - 20;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    
+                    if (!firstPage && positionY + imgHeight > pdf.internal.pageSize.getHeight() - 20) {
+                        pdf.addPage();
+                        positionY = 0;
+                    }
+                    
+                    const x = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+                    
+                    pdf.addImage(imgData, 'PNG', x, positionY, imgWidth, imgHeight);
+                    positionY += imgHeight + 10;
+                    
+                    if (i < selectedReports.length - 1) {
+                        pdf.addPage();
+                        positionY = 0;
+                    }
+                    
+                    firstPage = false;
+                });
+            }
+            
+            // Save the combined PDF
+            pdf.save(`RillCod_Combined_Progress_Reports_${new Date().toISOString().slice(0,10)}.pdf`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+        
+        // Print selected reports one by one
+        function printSelectedReportsSequentially(index) {
+            if (index >= selectedReports.length) {
+                showToast('All selected reports printed successfully!', 'success');
+                return;
+            }
+            
+            const reportData = selectedReports[index];
+            generateReportPDF(reportData, () => {
+                printSelectedReportsSequentially(index + 1);
+            });
+        }
+        
+        // Clear all saved reports
+        document.getElementById('clearAllBtn').addEventListener('click', function() {
+            if (savedReports.length === 0) {
+                showToast('No reports to clear.', 'info');
+                return;
+            }
+            
+            if (confirm('Clear all saved reports?')) {
+                savedReports = [];
+                selectedReports = [];
+                localStorage.setItem('rillcodSavedReports', JSON.stringify(savedReports));
+                updateSavedReportsList();
+                showToast('All reports cleared.', 'success');
+            }
+        });
+        
+        // Generate reports for batch entry
+        document.getElementById('generateBatchBtn').addEventListener('click', function() {
+            const studentNames = document.getElementById('batchStudentNames').value.split('\n').filter(name => name.trim() !== '');
+            
+            if (studentNames.length === 0) {
+                showToast('Please enter at least one student name.', 'error');
+                return;
+            }
+            
+            const commonData = {
+                reportDate: document.getElementById('reportDate').value,
+                theoryScore: document.getElementById('batchTheoryScore').value,
+                practicalScore: document.getElementById('batchPracticalScore').value,
+                attendance: document.getElementById('batchAttendance').value,
+                participation: document.getElementById('batchParticipation').value,
+                projectCompletion: document.getElementById('batchProjectCompletion').value,
+                homeworkCompletion: document.getElementById('batchHomeworkCompletion').value,
+                progressItems: Array.from(document.querySelectorAll('[name="batchProgressItem[]"]')).map(input => input.value),
+                strengths: document.getElementById('batchStrengths').value,
+                growth: document.getElementById('batchGrowth').value,
+                comments: document.getElementById('batchComments').value,
+                certificateText: document.getElementById('batchCertificateText').value,
+                courseName: document.getElementById('batchCourseName').value,
+                currentModule: document.getElementById('batchCurrentModule').value,
+                nextModule: document.getElementById('batchNextModule').value,
+                nextTermFee: document.getElementById('batchNextTermFee').value,
+                bankDetails: document.getElementById('batchBankDetails').value,
+                instructorName: document.getElementById('batchInstructorName').value,
+                duration: document.getElementById('batchDuration').value
+            };
+            
+            // Validate common data
+            if (!commonData.theoryScore || !commonData.practicalScore) {
+                showToast('Please fill in all required assessment fields', 'error');
+                return;
+            }
+            
+            // Add reports for each student
+            studentNames.forEach(name => {
+                const studentData = {...commonData};
+                studentData.studentName = name.trim();
+                savedReports.push(studentData);
+            });
+            
+            localStorage.setItem('rillcodSavedReports', JSON.stringify(savedReports));
+            updateSavedReportsList();
+            showToast(`Added ${studentNames.length} student reports to batch.`, 'success');
+            
+            // Clear the batch form
+            document.getElementById('batchStudentNames').value = '';
+        });
+        
+        // Update saved reports list display
+        function updateSavedReportsList() {
+            const list = document.getElementById('savedReportsList');
+            list.innerHTML = '';
+            
+            if (savedReports.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-500">No reports saved yet</div>';
+                selectedReports = [];
+                return;
+            }
+            
+            savedReports.forEach((report, index) => {
+                const reportDiv = document.createElement('div');
+                reportDiv.className = 'saved-report flex justify-between items-center p-2 border-b border-gray-200 hover:bg-gray-100';
+                if (selectedReports.includes(report)) {
+                    reportDiv.classList.add('bg-blue-50');
+                }
+                reportDiv.innerHTML = `
+                    <span>${report.studentName || 'Unnamed Student'}</span>
+                    <button onclick="removeSavedReport(${index}, event)" class="text-red-600 hover:text-red-800">
+                        ×
+                    </button>
+                `;
+                
+                reportDiv.addEventListener('click', function(e) {
+                    // Don't toggle if the remove button was clicked
+                    if (!e.target.classList.contains('text-red-600') && !e.target.classList.contains('hover:text-red-800')) {
+                        this.classList.toggle('bg-blue-50');
+                        
+                        if (this.classList.contains('bg-blue-50')) {
+                            if (!selectedReports.includes(report)) {
+                                selectedReports.push(report);
+                            }
+                        } else {
+                            selectedReports = selectedReports.filter(r => r !== report);
+                        }
+                    }
+                });
+                
+                list.appendChild(reportDiv);
+            });
+        }
+        
+        // Remove a saved report
+        function removeSavedReport(index, event) {
+            event.stopPropagation();
+            const removedReport = savedReports[index];
+            savedReports.splice(index, 1);
+            selectedReports = selectedReports.filter(r => r !== removedReport);
+            localStorage.setItem('rillcodSavedReports', JSON.stringify(savedReports));
+            updateSavedReportsList();
+            showToast('Report removed', 'success');
+        }
+        
+        // Generate canvas for a report
+        function generateReportCanvas(data, callback) {
+            return new Promise((resolve) => {
+                // Format date
+                const reportDate = data.reportDate ? new Date(data.reportDate) : new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = reportDate.toLocaleDateString('en-US', options);
+                
+                // Calculate grades
+                const theoryScore = parseInt(data.theoryScore) || 0;
+                const practicalScore = parseInt(data.practicalScore) || 0;
+                const attendance = parseInt(data.attendance) || 0;
+                
+                const theoryGrade = calculateGrade(theoryScore);
+                const practicalGrade = calculateGrade(practicalScore);
+                const attendanceGrade = calculateGrade(attendance);
+                const overallGrade = calculateGrade((theoryScore + practicalScore + attendance) / 3);
+                
+                // Update the report
+                document.getElementById('reportStudentName').textContent = data.studentName || '[Full Name]';
+                document.getElementById('reportCourseName').textContent = data.courseName || '[Course Name]';
+                document.getElementById('reportCurrentModule').textContent = data.currentModule || '[Current Module]';
+                document.getElementById('reportDateDisplay').textContent = formattedDate;
+                document.getElementById('footerDate').textContent = formattedDate;
+                document.getElementById('reportInstructor').textContent = data.instructorName || '[Instructor]';
+                document.getElementById('reportDuration').textContent = data.duration || '[Duration]';
+                
+                // Update progress items
+                const progressList = document.getElementById('reportProgressItems');
+                progressList.innerHTML = '';
+                (data.progressItems || ['No progress items entered']).forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${item.split(':')[0]}:</strong> ${item.split(':')[1] || ''}`;
+                    progressList.appendChild(li);
+                });
+                
+                document.getElementById('reportNextModule').textContent = data.nextModule || '[Next Module]';
+                
+                // Update assessment
+                document.getElementById('theoryScoreDisplay').textContent = theoryScore;
+                document.getElementById('theoryGradeDisplay').textContent = theoryGrade;
+                document.getElementById('practicalScoreDisplay').textContent = practicalScore;
+                document.getElementById('practicalGradeDisplay').textContent = practicalGrade;
+                document.getElementById('attendanceDisplay').textContent = attendance + '%';
+                document.getElementById('attendanceGradeDisplay').textContent = attendanceGrade;
+                document.getElementById('overallGradeDisplay').textContent = overallGrade;
+                document.getElementById('participationDisplay').textContent = data.participation || 'Not specified';
+                document.getElementById('projectCompletionDisplay').textContent = data.projectCompletion || 'Not specified';
+                document.getElementById('homeworkCompletionDisplay').textContent = data.homeworkCompletion || 'Not specified';
+                
+                // Update evaluation
+                const processedComments = (data.comments || '').replace(/\[Student\]/g, data.studentName)
+                                                     .replace(/\[they\]/g, data.studentName)
+                                                     .replace(/\[them\]/g, data.studentName)
+                                                     .replace(/\[their\]/g, data.studentName + "'s");
+                
+                document.getElementById('instructorComments').textContent = processedComments || 'No comments provided.';
+                document.getElementById('strengthsDisplay').textContent = data.strengths || 'No strengths specified.';
+                document.getElementById('growthDisplay').textContent = data.growth || 'No areas for growth specified.';
+                
+                // Update certificate
+                const processedCertText = (data.certificateText || '').replace(/\[Student Name\]/g, data.studentName)
+                                                             .replace(/\[Course Name\]/g, data.courseName || '[Course Name]')
+                                                             .replace(/\[Module Topics\]/g, data.currentModule || '[Module Topics]');
+                
+                document.getElementById('certificateTextDisplay').innerHTML = processedCertText || 'No certificate text provided.';
+                document.getElementById('nextTermFeeDisplay').textContent = data.nextTermFee || '[Fee]';
+                document.getElementById('bankDetailsDisplay').textContent = data.bankDetails || '[Bank details]';
+                
+                // Update or create chart
+                updateChart(theoryScore, practicalScore, attendance);
+                
+                // Show the report and generate canvas after a short delay to allow chart to render
+                document.getElementById('reportContent').classList.remove('hidden');
+                
+                // Add a small delay to ensure all elements are properly rendered
+                setTimeout(() => {
+                    // Get the report element
+                    const reportElement = document.getElementById('reportContent');
+                    
+                    html2canvas(reportElement, {
+                        scale: 2,
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: reportElement.scrollWidth,
+                        height: reportElement.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0,
+                        backgroundColor: '#FFFFFF'
+                    }).then(canvas => {
+                        document.getElementById('reportContent').classList.add('hidden');
+                        callback(canvas);
+                        resolve();
+                    }).catch(error => {
+                        console.error('Error generating canvas:', error);
+                        showToast('Error generating report', 'error');
+                        document.getElementById('reportContent').classList.add('hidden');
+                        resolve();
+                    });
+                }, 1000);
+            });
+        }
+        
+        // Handle form submission
+        document.getElementById('scoreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const formData = new FormData(this);
+            
+            // Validate required fields
+            if (!formData.get('studentName') || !formData.get('theoryScore') || !formData.get('practicalScore')) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const data = Object.fromEntries(formData.entries());
+            
+            // Get all progress items
+            data.progressItems = Array.from(document.querySelectorAll('[name="progressItem[]"]')).map(input => input.value);
+            
+            // Get the submit button
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.innerHTML = 'Generating PDF...';
+            submitBtn.disabled = true;
+            
+            // Generate the PDF
+            generateReportPDF(data, () => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+        
+        // Generate PDF report
+        function generateReportPDF(data, callback) {
+            generateReportCanvas(data, (canvas) => {
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                
+                // Calculate image dimensions to fit the page
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth - 20; // Add margins
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                // Center the image on the page
+                const x = (pageWidth - imgWidth) / 2;
+                const y = 5; // Reduced top margin
+                
+                pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+                
+                // Save the PDF
+                const studentName = data.studentName.replace(/\s+/g, '_');
+                pdf.save(`RillCod_Progress_Report_${studentName}.pdf`);
+                
+                if (callback) callback();
+            });
+        }
+        
+        function calculateGrade(score) {
+            if (score >= 90) return 'A';
+            if (score >= 80) return 'B';
+            if (score >= 70) return 'C';
+            if (score >= 60) return 'D';
+            return 'F';
+        }
+        
+        function updateChart(theoryScore, practicalScore, attendance) {
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Theory Test', 'Practical Test', 'Attendance'],
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: [theoryScore, practicalScore, attendance],
+                        backgroundColor: [
+                            'rgba(0, 0, 128, 0.7)',
+                            'rgba(128, 0, 0, 0.7)',
+                            'rgba(0, 128, 0, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 0, 128, 1)',
+                            'rgba(128, 0, 0, 1)',
+                            'rgba(0, 128, 0, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage Score'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Performance Metrics',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load saved reports when page loads
+        window.addEventListener('load', function() {
+            updateSavedReportsList();
+        });
+    </script>
+</body>
+</html>
